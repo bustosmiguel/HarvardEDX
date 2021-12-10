@@ -1,0 +1,753 @@
+---
+title: "Survey of various clients: Cleaning, NA`s, Linear Regression and Plots"
+author: "Miguel Angel Bustos Sáez"
+date: "12/7/2021"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+toc: yes
+toc_depth: 2
+---
+
+# **1. Structure people and create people1 data set**
+
+### **Structure**
+
+f for female, m for male, NA´s and a lot of outliers were found in the survey
+```¨{r}
+str(people)
+```
+![](Capturas2/1.png)
+
+### **People1**
+
+```¨{r}
+people1 <- select(people, "gender", "country", "age", "education", "income", "work_status")
+```
+
+
+![](Capturas2/2.png)
+
+# **2. Variables data set classes and modeling some information**
+
+```¨{r}
+sapply(people1, class)
+```
+
+```¨{r}
+plot(people1$age, people1$income) 
+```
+
+![](Capturas2/3.png)
+
+
+### **Working with NA´s**
+
+```¨{r}
+people1$age <- as.numeric(as.character(people1$age))
+people1$education <- as.numeric(as.character(people1$education))
+people1$income <- as.numeric(as.character(people1$income))
+sapply(people1, class)
+mean(people1$age, na.rm = TRUE)
+```
+
+### **Working with outliers**
+
+```¨{r}
+plot(people1$age, people1$income) 
+
+```
+![](Capturas2/4.png)
+
+Now it doesn´t have the outlier
+
+```¨{r}
+which.max(people1$income) 
+people1[9002,]
+```
+![](Capturas2/4.1.png)
+```¨{r}
+people1 <- people1[-c(9002),]
+```
+
+### **Eliminate the registers that are grater than or equal to 100 ages and plot it**
+
+```¨{r}
+plot(people1$age, people1$income)
+```
+![](Capturas2/5.png)
+
+```¨{r}
+which(people1$age >= 100)
+people1[c(212, 1548, 1601, 2331, 4278, 7898),]
+people1 <- people1[-c(212, 1548, 1601, 2331, 4278, 7898),]
+plot(people1$age, people1$income)
+```
+
+![](Capturas2/5.1.png)
+
+### **Users that compleated age in minus cero, minus 18 and plot**
+
+Because the magazines are for business men and woman, the decision is focusing in more than 18 years old clients:
+
+```¨{r}
+which(people1$age < 0)
+people1[c(2906, 5013, 5814, 5990, 6572, 8749),]
+```
+
+Eliminate registers that are under 18 years old and plot
+
+```¨{r}
+which(people1$age < 18)
+people1[c(223, 305, 440, 1247, 1397, 1415, 1466, 1507, 1713, 1718, 2049, 2593, 2703, 2739, 2859, 2870, 2906, 
+          2955, 3268, 3396, 3434, 3575, 3837, 4031, 4350, 4450, 4738, 4888, 4922, 4987, 5013, 5137, 5298, 
+          5388, 5695, 5733, 5814, 5890, 5904, 5990, 6026, 6080, 6375, 6455, 6572, 6785, 6930, 7072,
+          7229, 7509, 7712, 7875, 8076, 8224, 8580, 8643, 8749, 8751, 8896),]
+
+people1 <- people1[-c(223, 305, 440, 1247, 1397, 1415, 1466, 1507, 1713, 1718, 2049, 2593, 2703, 2739, 2859, 2870, 2906, 
+                     2955, 3268, 3396, 3434, 3575, 3837, 4031, 4350, 4450, 4738, 4888, 4922, 4987, 5013, 5137, 5298, 
+                     5388, 5695, 5733, 5814, 5890, 5904, 5990, 6026, 6080, 6375, 6455, 6572, 6785, 6930, 7072,
+                     7229, 7509, 7712, 7875, 8076, 8224, 8580, 8643, 8749, 8751, 8896),]
+```
+
+```¨{r}
+plot(people1$age, people1$income)
+```
+![](Capturas2/6.png)
+
+Creating a new variable called "Education Level"
+
+```¨{r}
+people1 <- people1 %>%
+  mutate(Education_Level = case_when(
+    education == 0  ~ "No education",
+    education >= 1 & education <= 6 ~ "Basic",
+    education >= 7 ~ "High"))
+```
+![](Capturas2/7.png)
+
+# **3. NA´s Global Exploratory **
+
+### **Creating a new variable called "Education Level"**
+### **Working with the 467 NA´s observations of people1 data set**
+
+```¨{r}
+which(is.na(people1)) 
+sum(is.na(people1)) 
+```
+
+```¨{r}
+colSums(is.na(people1))
+```
+![](Capturas2/8.png)
+
+# **4.NA´s replacement with Critical Thinking**
+
+### **The mean and the median, central tendency measures**
+
+491 NA´s were found in age, without these NA`s, age variable has a mean of 30.13061 and a median of 28
+```¨{r}
+which(is.na(people1$age))
+```
+![](Capturas2/9.png)
+```¨{r}
+mean(people1$age, na.rm = TRUE)
+```
+```¨{r}
+median(people1$age, na.rm = TRUE)
+```
+
+### **Delete NA´s**
+
+All 491 NA´s were delete with this code:
+```¨{r}
+people1$age[is.na(people1$age)] <- mean(people1$age, trim = 0, na.rm = TRUE)
+```
+
+And the result is: integer(0) because were eliminated the NA´s
+```¨{r}
+which(is.na(people1$age))
+```
+![](Capturas2/10.png)
+
+
+
+
+
+425 NA´s were found in education, the mean is 8.265656 and the median is 7
+```¨{r}
+which(is.na(people1$education)) 
+```
+
+![](Capturas2/11.png)
+
+```¨{r}
+mean(people1$education, na.rm = TRUE)
+```
+
+```¨{r}
+median(people1$education, na.rm = TRUE) 
+```
+
+All 425 NA´s were delete with this code:
+
+```¨{r}
+people1$education[is.na(people1$education)] <- mean(people1$education, na.rm = TRUE)
+```
+
+```¨{r}
+which(is.na(people1$education)) 
+```
+
+![](Capturas2/12.png)
+
+
+
+
+
+
+
+
+1568 NA´s were found in income variable, the mean is  90 and the median is 23
+```¨{r}
+which(is.na(people1$income))
+```
+![](Capturas2/13.png)
+```¨{r}
+mean(people1$income, na.rm = TRUE)
+```
+
+```¨{r}
+median(people1$income, na.rm = TRUE) 
+```
+
+All 1568 NA´s were delete with this code:
+```¨{r}
+people1$income[is.na(people1$income)] <- mean(people1$income, na.rm = TRUE) 
+```
+
+```¨{r}
+which(is.na(people1$income))
+```
+
+![](Capturas2/14.png)
+
+
+
+
+
+
+
+
+In gender variable, 0 NA were found, but has m and f values, let`s change these for male and female
+```¨{r}
+which(is.na(people1$gender)) #0 NA´s were found
+people1$gender[people1$gender == "m"] <- "Male"
+people1$gender[people1$gender == "f"] <- "Female"
+people1$gender[people1$gender == "null"] <- "Prefer not to say"
+```
+
+![](Capturas2/15.png)
+
+
+
+
+
+
+
+
+
+464 NA`s were found in country variable
+```¨{r}
+which(is.na(people1$country))
+```
+![](Capturas2/16.png)
+
+Settinng all NA`s will be categorized as "World"
+
+```¨{r}
+people1$country[people1$country == "NA"] <- "World"
+people1$country[is.na(people1$country)] <- "World"
+```
+And now we have zero NA in country:
+
+```¨{r}
+which(is.na(people1$country))
+```
+
+![](Capturas2/17.png)
+
+
+
+
+
+
+
+
+### **Without answer data**
+The variable work_status has a lot of null expresions, all these expressions will be change by "Without Answer"
+
+```¨{r}
+which(is.na(people1$work_status))
+```
+[1] 0, 1, 2, 3, 4, 6, 11 These were chenged by others, and "null" by "Without answer":
+
+```¨{r}
+people1$work_status[people1$work_status == "null"] <- "Without answer"
+people1$work_status[people1$work_status == 0] <- "Others"
+people1$work_status[people1$work_status == 1] <- "Others"
+people1$work_status[people1$work_status == 2] <- "Others"
+people1$work_status[people1$work_status == 3] <- "Others"
+people1$work_status[people1$work_status == 4] <- "Others"
+people1$work_status[people1$work_status == 6] <- "Others"
+people1$work_status[people1$work_status == 11] <- "Others"
+```
+
+
+
+# **5. Inference, new variable products and plots**
+
+### **Who answered the survey?**
+
+"Employees" and "Do not work" people:
+
+```¨{r}
+  people1 %>% filter(age %in% 18:100)%>% 
+  ggplot(aes(x = work_status, y = age, fill = education))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_point(position = "jitter", aes(color = gender))
+```
+
+![](Capturas2/18.png)
+
+
+### **What`s the income of "Employees" and "Do not work"?**
+
+```¨{r}
+    people1 %>% filter(age %in% 18:100 & work_status %in% c("Employee", "Do not work"))%>% 
+    ggplot(aes(x = work_status, y = income))+
+    geom_boxplot(outlier.shape = NA)+
+    geom_point(position = "jitter", aes(color = gender))
+```
+
+![](Capturas2/19.png)
+
+
+Sales focus on: "Employees" What course we can sale to them? Most of them are female:
+
+```¨{r}
+table(people1$work_status, people1$gender)
+```
+
+![](Capturas2/20.png)
+
+
+### **Creating variables magazines and price to offer to survey people**
+The Sales Manager decision was prepare Business Magazines to people that answered the survey
+
+```¨{r}
+sample1 = people1 %>% filter(age %in% 30:35 & work_status %in% c("Business owner", "Employee", "Self-employed"))
+```
+
+```¨{r}
+BM <- c("BusinnessMen Magazine")
+BMP <- c(250)
+Business_Men_Magazine <- data.frame(BM, BMP, stringsAsFactors = FALSE)
+```
+```¨{r}
+BW <- c("BusinessWomen Magazine")
+BWP <-c(200)
+Business_Women_Magazine <- data.frame(BW, BWP, stringsAsFactors = FALSE)
+```
+
+Now the Sales Manager wants to sale two magazines, one for women and another for men
+Here are a new variable column, with a magazine for women and men:
+
+```¨{r}
+people1 <- people1 %>% 
+  mutate(product = case_when(
+    gender == "Female"~ "BusinessWomen Magazine",
+    gender == "Male" ~ "BusinessMan Magazine"))
+```
+
+![](Capturas2/21.png)
+
+And the price of the Magazines will be USD 250 for Female and 200 dollars for Male, annually digital suscription:
+
+```¨{r}
+people1 <- people1 %>% 
+  mutate(annual_price = case_when(
+  gender == "Female" ~ 200,
+  gender == "Male" ~ 250)
+)
+```
+
+![](Capturas2/22.png)
+
+Now this is the quantity of Magazine for genre:
+
+```¨{r}
+people1 %>% ggplot(aes(x = product)) +
+  geom_bar(mapping = aes(x = product, color = gender, fill = gender))+
+  theme_bw(base_size = 10, base_rect_size = 1, base_line_size = 1.5)+
+  labs(y = "Magazine Quantity", x = "Magazine Name", title = "Magazine Quantity per gender")
+```
+![](Capturas2/23.png)
+
+
+# **6. Linear regression and plots**
+
+Testing some lineal models country.sales.lm, country.sales.lm2 and country.sales.lm3, and choose just one, country.sales.lm3 because it shows country information
+
+### **Linear models**
+linear model for annual_price as a function of gender and income:
+
+```¨{r}
+country.sales.lm <- lm(annual_price ~ gender + income, data = people1)
+```
+![](Capturas2/24.png)
+
+linear model for income as a function of gender and annual_price:
+
+```¨{r}
+country.sales.lm2 <- lm(income ~ gender + annual_price, data = people1)
+```
+
+![](Capturas2/25.png)
+
+### **Linear model chosen**
+Now this linear model has been chosen, linear model for income as a function of gender and country:
+```¨{r}
+country.sales.lm3 <- lm(income ~ gender + country, data = people1)
+```
+
+![](Capturas2/26.png)
+
+
+
+Tis summary of the country.sales.lm3 linear model shows residuals ans coefficients per country:
+```¨{r}
+summary(country.sales.lm3)
+```
+
+![](Capturas2/27.png)
+
+
+Based on the latest three tests, we can see that lm3, shows a relationship with the income, gender and country:
+
+```¨{r}
+summary(country.sales.lm3)
+```
+
+Interpretation and difference between Afhanistan and Taiwan, this example of these two countries because both of them has the biggest difference in the income, that has this data set people1:
+
+The estimation of gender and country in Afganistan is 147 and Taiwan is -55
+This means that for every 1% of the gender there`s a correlated of 147% in Afganistan in incomes
+And for everyone 1% in Taiwan there´s a correlated of -55.
+
+The Standard error in Afganistan is 147 and in Taiwain it is minus 142, notoriuous gap in both countries, and all others has over 100.
+The T-statistics or T-values are all in -0 and 1, exceptionally Madagascar that has 3.562
+The p-values reflects these errors all over zero and there is almost zero probability that this effect is due to chance.
+
+Afghanistán and Taiwán, here in this plot, we can see the enormeus difference in income:
+
+```¨{r}
+lm3plot <- people1 %>% select(country, income, gender) %>% filter(country %in% c("Afghanistan", "Taiwan"))
+lm3plot %>% ggplot(aes(country, income))+
+  geom_point(aes(country, income, color = gender))+
+  labs(y = "Country", x = "Income", title = "The maximum and the minimum countries correlated")
+```
+
+![](Capturas2/28.png)
+
+Taiwan Income, gender and product:
+
+```¨{r}
+people1 %>% filter(country == "Taiwan") %>% 
+  ggplot()+
+  geom_bar(mapping = aes(x = gender, y = income, color = product, fill = product), stat = "identity")
+```
+
+![](Capturas2/29.png)
+
+
+Afghanistan Income, gender and product:
+
+```¨{r}
+people1 %>% filter(country == "Afghanistan") %>% 
+  ggplot()+
+  geom_bar(mapping = aes(x = gender, y = income, color = product, fill = product), stat = "identity")
+```
+
+![](Capturas2/42.png)
+
+
+
+### **Data set survey concentration**
+In all people1 data set, the maximum concentration it`s less than 500 income between 20 and 40 years old:
+
+```¨{r}
+ggplot(people1, aes(x = age, y = income))+
+  geom_point(aes(x = age, y = income, color = gender))+
+  labs(y = "Income", x = "Age", title = "Income and Age Visualization colored by gender")
+```
+
+![](Capturas2/30.png)
+
+
+More age, more income, and the line:
+```¨{r}
+lm3plot2 <- ggplot(people1, aes(age, income))+geom_point()
+graphlm3 <- lm3plot2 + geom_smooth(method = "lm", col = "black") + scale_x_log10()
+graphlm3 
+```
+
+![](Capturas2/31.png)
+
+
+Obviously y axis in this line is disproportionated, but anyway we can see the line better, this because has a transformation scale in the code:
+```¨{r}
+graphlm3 <- lm3plot2 + geom_smooth(method = "lm", col = "black") + scale_x_log10() + scale_y_log10()
+
+```
+
+![](Capturas2/32.png)
+
+or colored but not with the transformation scale:
+
+```¨{r}
+ggplot(data = people1, aes(age, income))+
+  geom_smooth(method = lm, se = FALSE)+
+  geom_point(aes(color = gender))
+```
+
+![](Capturas2/33.png)
+
+Much better if we take a sample more or equal to 250, the blue line has a better visualization:
+
+```¨{r}
+people1 %>% 
+  filter(income <= 250) %>%  # Less or equal to 250 of income
+  ggplot(aes(x = age, income))+
+  geom_smooth(method = lm, se = FALSE)+
+  geom_point(aes(color = gender))+
+  labs(x = "Age", y = "Income", title = "Less or equal to 250 week income")
+```
+
+![](Capturas2/34.png)
+
+
+#Now the linear regression line and a red point that intersect the mean average and the mean age:
+
+```¨{r}
+add_line <- function(slope_people){
+  people1_summary <- people1 %>% 
+    summarize(N = n(), r = cor(age, income), 
+              mean_age = mean(age), mean_income = mean(income),
+               sd_age = sd(age), sd_income = sd(income)) %>% 
+    mutate(true_slope = r * sd_age / sd_income,
+           true_intercept = mean_income - true_slope*mean_age) # This vector shows means, slope, sd and intercept
+  p <- ggplot(data = people1, aes(x = age, y = income)) +
+    geom_point()+
+    geom_point(data = people1_summary,
+               aes(x = mean_age, y = mean_income), # This scatter plot intercept mean age and mean income
+               color = "red", size = 3) 
+  my_dat <- people1_summary %>% 
+    mutate(slope_people = slope_people,
+           my_intercept = mean_income - slope_people * mean_age)
+  p + geom_abline(data = my_dat,
+                aes(intercept = my_intercept, slope = slope_people), color = "dodgerblue")
+  }
+
+add_line(slope_people = 1.0)
+
+```
+
+![](Capturas2/35.png)
+
+About the model, here it is the summary and the residuals has a mean of (residuals(mod)) [1] -4.7963, the residuals are the difference between observed and predicted data:
+
+```¨{r}
+mod <- lm(income ~ gender + country, data = people1)
+summary(mod)
+```
+
+![](Capturas2/36.png)
+
+And here are the coefficients, describing the relationship the predictor variable and the response, that shows the beta coefficients and their statistical significance, because are a lot of countries, this imagen shows just the intercept, these intercepts are beta coefficients between country and income
+```¨{r}
+coef(mod)
+```
+
+![](Capturas2/37.png)
+
+
+And show the full output, this is the mean or average of all the residuals:
+```¨{r}
+mean(residuals(mod))
+```
+
+![](Capturas2/38.png)
+
+
+
+Now in R we have the augment function, it takes the object and gives the data that adjust to the model, with other information (residuals and others)
+
+library(broom)
+
+This people_1_tidy vector with augment() shows data that fixed to the model: .fitted, .residuals, .hat, .sigma
+, . cooksd, std.residual
+
+
+
+```¨{r}
+people_1_tidy <- augment(mod)
+glimpse(people_1_tidy)
+mean(residuals(mod))
+```
+
+![](Capturas2/39.png)
+
+Let`s take RMSE, and after this, with .residuals we will take R2
+
+
+Now RMSE:
+```¨{r}
+mean(residuals(mod))
+sqrt(sum(residuals(mod)^2)/df.residual(mod))
+```
+Root Mean Square Error of 273.0691, this RMSE is very high.
+
+
+
+![](Capturas2/40.png)
+
+
+
+
+And now R2 with .residuals, that were obtained from glipse(people_1_tidy)
+
+Simple linear regression consists of generating a regression model (equation of a line) that allows us to explain the linear relationship that exists between two variables. The dependent or response variable is identified as Y and the predictor or independent variable as X
+
+
+And with .residuals information, it is possible to create a column called R_squared and we get R2 = 0.0392
+
+```¨{r}
+summary(mod)
+people_1_tidy %>% 
+  summarize(var_y = var(income), var_e = var(.resid)) %>% 
+  mutate(R_squared = 1 - var_e / var_y) 
+```
+
+The .resid value is in the second last picture, this is in the glimpse(people_1_tidy), there are residuals or .resid
+
+![](Capturas2/41.png)
+
+This statistic indicates the percentage of the variance in the dependent variable that the independent variables explain collectively. R-squared measures the strength of the relationship between your model and the dependent variable on a convenient 0 – 100% scale. This result of 0.0392 of R Sqared means that has a low relationship between income and country.
+
+Other value is .cooksd that were connsider in the line glimpse(people_1_tidy), the measurement of influence, this is used to identify some outliers:
+
+```¨{r}
+mod %>% 
+  augment() %>% 
+  arrange(desc(.cooksd)) %>% 
+            head()
+```
+![](Capturas2/43.png)
+
+Or with this code
+```¨{r}
+cooks.distance(mod) %>% head
+```
+![](Capturas2/44.png)
+
+```¨{r}
+cooks.distance(mod) %>% tail
+```
+
+![](Capturas2/44.png)
+
+
+
+
+
+Anyway, it is not neccessary remove outliers, because, the NAs were removed. At the begining, this project removed the outliers and reduced the NAS values. But now more NAS were apprear:
+
+These NAS are in product and annual_price, lets remove them and again check NAS presence:
+  
+```¨{r}
+which(is.na(people1$product)) 
+people1[17,]
+```
+![](Capturas2/47.png)
+
+![](Capturas2/46.png)
+
+
+The sales strategy is offer the two Magazines to all these clientes that did not anser the gender in the form, so the client can accept one or both magazines, and to offer any magazine just by 200 dollars per year
+```¨{r}
+people1$product[people1$product == "NA"] <- "Offertwomagazines"
+people1$product[is.na(people1$product)] <- "Offertwomagazines"
+people1$annual_price[people1$annual_price == "NA"] <- 200
+people1$annual_price[is.na(people1$annual_price)] <- 200
+```
+
+
+
+And now we don`t have NAS:
+
+```¨{r}
+sum(is.na(people1)) 
+colSums(is.na(people1))
+```
+
+![](Capturas2/48.png)
+
+### **Main Businesses Periscope**
+
+And now that definetely don´t have NAS, and we know that we´ll have more alternative to make sellings to over 30 years old people, let`s see the countries were people have more income, we have 366 people that is more or equal to 30 years old and has an income of more or equal tan 120 dollars per week, these people will be the focus at the beginning, because as they have more income,they could buy the magazine more quicky:
+
+This code will show the 179 countries
+
+```¨{r}
+unique(people1$country)
+```
+ 
+But the main business periscope is in people older than 30 and more than 250 dollars of income per week:
+
+```¨{r}
+topsales <- people1 %>% filter(age >= 30 & income >= 250) 
+```
+![](Capturas2/49.png)
+
+Here it is the main business periscope, 61 countries:
+
+```¨{r}
+topsales %>% ggplot(aes(x = country, y = income, color = gender)) + 
+  geom_point(aes(x = country, y = income))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.6, face = "bold"))+
+  theme(axis.text.y = element_text(face = "bold"))
+```
+
+![](Capturas2/50.png)
+
+
+At the beginning, just 61 countries will be the main focus of the magazine business
+
+```¨{r}
+unique(topsales$country)
+```
+
+![](Capturas2/51.png)
+
+
+# **7. CONCLUSION AND SALES RECOMENDATION**
+
+The linear model based on country and income, gives a disperse RMSE and very disperse relationship between income and country, but a positive relationship between Age and Income, where the blue line and the median of these two variables, represented by the red point, gives information to the Sales Maganer and the CEO, that the magazine must be sell to more age or older clients, because more older more income they have.
+
+In the survey, 175 people answered "Prefer not to say" in the gender or sex option, female or male. The recommendation for these clients is offer at the minimum price of 200 dollars per year, the suscription on one of any magazine, so it is important for them offer the two magazines.
+
+OK, this project had a good treatment a lot of NA information and take this survey, make a linear model in age, income and country variables and shows important information to take good decision to offer the magazines to over 30 years old, because it`s the mean of age and 90 dollars weekly income because it is the median of the income, and there is the red point in this linear model.
+
+
